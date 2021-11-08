@@ -1,3 +1,4 @@
+// @@@SNIPSTART subscription-ts-worker-start
 import { Worker } from '@temporalio/worker';
 import * as activities from './activities';
 
@@ -7,7 +8,7 @@ async function run() {
   const worker = await Worker.create({
     workflowsPath: require.resolve('./workflows'),
     activities,
-    taskQueue: 'tutorial',
+    taskQueue: 'SubscriptionsTaskQueueTS',
   });
   // Worker connects to localhost by default and uses console.error for logging.
   // Customize the Worker by passing more options to create():
@@ -26,3 +27,4 @@ run().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+// @@@SNIPEND

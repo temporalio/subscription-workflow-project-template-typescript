@@ -1,13 +1,67 @@
-# hello-world
+# Temporal Subscription Workflow Template in TypeScript
+<!-- @@@SNIPSTART subscription-ts-readme -->
+This project template illustrates the design pattern for subscription style business logic.
 
-This example is the default project that is scaffolded out for you when you run `npx @temporalio/create@latest ./myfolder`.
+**Setup**
 
-You can read the explanation on our docs: https://docs.temporal.io/docs/typescript/hello-world
+Run the Temporal Server:
 
-## Steps to run this example
+```bash
+git clone https://github.com/temporalio/docker-compose.git
+cd docker-compose
+docker-compose up
+```
 
-1. Make sure the Temporal Server is running locally. Follow the [Quick install guide](https://docs.temporal.io/docs/server/quick-install) to do that.
-2. Run `npm install` to install dependencies.
-3. Run `npm run build` to compile the project.
-4. Run `npm start` to start the worker. Leave the worker process running.
-5. Run `npm run workflow` to run the workflow. It should print out `Hello, Temporal!`
+**Start**
+
+Start the Worker:
+
+```bash
+npm run start.watch
+```
+
+Start the Workflow Executions:
+
+```bash
+npm run workflow
+```
+
+This will start the Workflow Executions for 5 customers with the following Ids:
+
+```text
+Id-0
+Id-1
+Id-2
+Id-3
+Id-4
+```
+
+**Get billing info**
+
+You can Query the Workflow Executions and get the billing information for each customer.
+
+```bash
+npm run querybillinginfo
+```
+
+Run this multiple times to see the billing period number increase during the executions or see the billing cycle cost.
+
+**Update billing**
+
+You can send a Signal a Workflow Execution to update the billing cycle cost to 300 for all customers.
+
+```bash
+npm run updatechargeamount
+```
+
+**Cancel subscription**
+
+You can send a Signal to all Workflow Executions to cancel the subscription for all customers.
+Workflow Executions will complete after the currently executing billing period.
+
+```bash
+npm run cancelsubscription
+```
+
+After running this, check out the [Temporal Web UI](localhost://8088) and see that all subscription Workflow Executions have a "Completed" status.
+<!-- @@@@SNIPEND -->
