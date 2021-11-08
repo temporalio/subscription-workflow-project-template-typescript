@@ -26,15 +26,17 @@ Start the Workflow Executions:
 npm run workflow
 ```
 
-This will start the Workflow Executions for 5 customers with the following Ids:
+This will start the Workflow Executions for 5 customers in parallel:
 
-```text
-Id-0
-Id-1
-Id-2
-Id-3
-Id-4
+```bash
+Sending welcome email to email-3@customer.com
+Sending welcome email to email-4@customer.com
+Sending welcome email to email-2@customer.com
+Sending welcome email to email-1@customer.com
+Sending welcome email to email-5@customer.com
 ```
+
+Each of their periods and charges are varied on purpose to simulate real life variation.
 
 **Get billing info**
 

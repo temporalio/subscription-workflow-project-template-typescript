@@ -6,7 +6,7 @@ async function run() {
   const client = new WorkflowClient(connection.service, {
     workflowDefaults: { taskQueue: "SubscriptionsTaskQueueTS" },
   });
-  for (let i = 0; i < 5; i++) {
+  for (let i = 1; i < 6; i++) {
     const handle = await client.getHandle("SubscriptionsWorkflowId-" + i);
     const result = await handle.query<number>("BillingPeriodNumber");
     const result2 = await handle.query<number>("BillingPeriodChargeAmount");

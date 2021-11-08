@@ -9,30 +9,35 @@ async function run() {
     workflowDefaults: { taskQueue: "SubscriptionsTaskQueueTS" },
   });
 
-  for (let i = 0; i < 5; i++) {
-    const cust = {
-      FirstName: "First Name" + i,
-      LastName: "Last Name" + i,
-      Email: "someemail" + i,
-      Subscription: {
-        TrialPeriod: 10000, // 10 seconds
-        BillingPeriod: 10000, // 10 seconds
-        MaxBillingPeriods: 24,
-        initialBillingPeriodCharge: 120,
-      },
-      Id: "Id-" + i,
-    } as Customer;
-    try {
-      const result = await client.execute(SubscriptionWorkflow, {
-        args: [cust],
-        workflowId: "SubscriptionsWorkflow" + cust.Id,
-        workflowRunTimeout: "10 mins",
-      });
-      console.log("Workflow result", result);
-    } catch (err) {
-      console.log("Unable to execute workflow", err);
-    }
-  }
+  const custArray = [1, 2, 3, 4, 5].map(
+    (i) =>
+      ({
+        FirstName: "First Name" + i,
+        LastName: "Last Name" + i,
+        Email: "email-" + i + "@customer.com",
+        Subscription: {
+          TrialPeriod: 3000 + i * 1000, // 3 seconds
+          BillingPeriod: 3000 + i * 1000, // 3 seconds
+          MaxBillingPeriods: 3,
+          initialBillingPeriodCharge: 120 + i * 10,
+        },
+        Id: "Id-" + i,
+      } as Customer)
+  );
+  const resultArr = await Promise.all(
+    custArray.map((cust) =>
+      client
+        .execute(SubscriptionWorkflow, {
+          args: [cust],
+          workflowId: "SubscriptionsWorkflow" + cust.Id,
+          workflowRunTimeout: "10 mins",
+        })
+        .catch((err) => console.error("Unable to execute workflow", err))
+    )
+  );
+  resultArr.forEach((result) => {
+    console.log("Workflow result", result);
+  });
 }
 
 run().catch((err) => {

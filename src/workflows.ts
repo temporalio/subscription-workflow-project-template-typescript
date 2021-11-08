@@ -20,6 +20,7 @@ export async function SubscriptionWorkflow(
   customer: Customer
 ): Promise<string> {
   let subscriptionCancelled = false;
+  let totalCharged = 0;
 
   const CustomerIdName = useState("CustomerIdName", "customerid");
   const BillingPeriodNumber = useState("BillingPeriodNumber", 0);
@@ -54,10 +55,12 @@ export async function SubscriptionWorkflow(
     while (true) {
       if (BillingPeriodNumber.value >= customer.Subscription.MaxBillingPeriods)
         break;
+      console.log('charging', customer.Id, BillingPeriodChargeAmount.value)
       await chargeCustomerForBillingPeriod(
         customer,
         BillingPeriodChargeAmount.value
       );
+      totalCharged += BillingPeriodChargeAmount.value;
       // Wait 1 billing period to charge customer or if they cancel subscription
       // whichever comes first
       if (
@@ -68,7 +71,6 @@ export async function SubscriptionWorkflow(
       ) {
         // If customer cancelled their subscription send notification email
         await sendCancellationEmailDuringActiveSubscription(customer);
-      } else {
         break;
       }
       BillingPeriodNumber.value++;
@@ -78,7 +80,7 @@ export async function SubscriptionWorkflow(
     if (!subscriptionCancelled) {
       await sendSubscriptionOverEmail(customer);
     }
-    return "Completed Subscription Workflow";
+    return "Completed " + wf.workflowInfo().workflowId + ", Total Charged: " + totalCharged;
   }
 }
 
@@ -86,7 +88,11 @@ function useState<T = any>(name: string, initialValue: T) {
   const signal = wf.defineSignal<[T]>(name);
   const query = wf.defineQuery<T>(name);
   let state: T = initialValue;
-  wf.setHandler(signal, (newValue: T) => void (state = newValue));
+  // wf.setHandler(signal, (newValue: T) => void (state = newValue));
+  wf.setHandler(signal, (newValue: T) => {
+    console.log('setting value', newValue)
+    state = newValue
+  });
   wf.setHandler(query, () => state);
   return {
     signal,

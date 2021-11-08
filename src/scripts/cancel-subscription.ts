@@ -7,9 +7,14 @@ async function run() {
   const client = new WorkflowClient(connection.service, {
     workflowDefaults: { taskQueue: "SubscriptionsTaskQueueTS" },
   });
-  for (let i = 0; i < 5; i++) {
-    const handle = await client.getHandle("SubscriptionsWorkflowId-" + i);
-    await handle.signal(cancelSubscription);
+  for (let i = 1; i < 6; i++) {
+    try {
+      const handle = await client.getHandle("SubscriptionsWorkflowId-" + i);
+      await handle.signal(cancelSubscription);
+    } catch (err: any) {
+      if (err.details) console.error(err.details);
+      else console.error(err);
+    }
   }
 }
 
