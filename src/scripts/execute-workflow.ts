@@ -17,7 +17,7 @@ async function run() {
         Email: "email-" + i + "@customer.com",
         Subscription: {
           TrialPeriod: 3000 + i * 1000, // 3 seconds
-          BillingPeriod: 3000 + i * 1000, // 3 seconds
+          BillingPeriod: 3000 + i, // 3 seconds
           MaxBillingPeriods: 3,
           initialBillingPeriodCharge: 120 + i * 10,
         },

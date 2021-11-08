@@ -10,7 +10,7 @@ const {
   sendCancellationEmailDuringActiveSubscription,
   sendSubscriptionOverEmail,
 } = wf.proxyActivities<typeof activities>({
-  startToCloseTimeout: "5 mins",
+  startToCloseTimeout: "10 seconds",
 });
 
 
@@ -90,7 +90,7 @@ function useState<T = any>(name: string, initialValue: T) {
   let state: T = initialValue;
   // wf.setHandler(signal, (newValue: T) => void (state = newValue));
   wf.setHandler(signal, (newValue: T) => {
-    console.log('setting value', newValue)
+    console.log('updating ', name, newValue)
     state = newValue
   });
   wf.setHandler(query, () => state);

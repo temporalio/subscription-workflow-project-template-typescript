@@ -39,6 +39,34 @@ Sending welcome email to email-5@customer.com
 ```
 
 Each of their periods and charges are varied on purpose to simulate real life variation.
+After their "trial" period, each customer will be charged every 3 seconds:
+
+```
+[SubscriptionWorkflow(SubscriptionsWorkflowId-1)] charging Id-1 130
+Charging email-1@customer.com amount 130 for their billing period
+[SubscriptionWorkflow(SubscriptionsWorkflowId-2)] charging Id-2 140
+Charging email-2@customer.com amount 140 for their billing period
+[SubscriptionWorkflow(SubscriptionsWorkflowId-3)] charging Id-3 150
+Charging email-3@customer.com amount 150 for their billing period
+[SubscriptionWorkflow(SubscriptionsWorkflowId-4)] charging Id-4 160
+Charging email-4@customer.com amount 160 for their billing period
+[SubscriptionWorkflow(SubscriptionsWorkflowId-5)] charging Id-5 170
+Charging email-5@customer.com amount 170 for their billing period
+```
+
+If you let this run to completion, the Workflow Executions complete and report their results back:
+
+```bash
+$ npm run workflow
+> temporal-hello-world@0.1.0 workflow /Users/swyx/Temporal/subscription-workflow-project-template-typescript
+> ts-node src/scripts/execute-workflow.ts
+
+Workflow result Completed SubscriptionsWorkflowId-1, Total Charged: 390
+Workflow result Completed SubscriptionsWorkflowId-2, Total Charged: 420
+Workflow result Completed SubscriptionsWorkflowId-3, Total Charged: 450
+Workflow result Completed SubscriptionsWorkflowId-4, Total Charged: 480
+Workflow result Completed SubscriptionsWorkflowId-5, Total Charged: 510
+```
 
 **Get billing info**
 
@@ -48,7 +76,14 @@ You can Query the Workflow Executions and get the billing information for each c
 npm run querybillinginfo
 ```
 
-Run this multiple times to see the billing period number increase during the executions or see the billing cycle cost.
+You can run this after execution completes, or during execution to see the billing period number increase during the executions or see the billing cycle cost.
+
+```bash
+Workflow: Id SubscriptionsWorkflowId-1
+Billing Results Billing Period 3
+Billing Results Billing Period Charge 130
+# etc...
+```
 
 **Update billing**
 
@@ -56,6 +91,14 @@ You can send a Signal a Workflow Execution to update the billing cycle cost to 3
 
 ```bash
 npm run updatechargeamount
+```
+
+This will update all customer's charge amount to 300:
+
+```bash
+[SubscriptionWorkflow(SubscriptionsWorkflowId-4)] updating BillingPeriodChargeAmount 300
+[SubscriptionWorkflow(SubscriptionsWorkflowId-4)] charging Id-4 300
+Charging email-4@customer.com amount 300 for their billing period
 ```
 
 **Cancel subscription**
@@ -66,6 +109,15 @@ Workflow Executions will complete after the currently executing billing period.
 ```bash
 npm run cancelsubscription
 ```
+
+This will cancel all outstanding subscriptions, sending a cancellation email to them:
+
+```bash
+Sending active subscriber cancellation email to email-2@customer.com
+Sending active subscriber cancellation email to email-4@customer.com
+Sending active subscriber cancellation email to email-5@customer.com
+```
+
 
 After running this, check out the [Temporal Web UI](localhost://8088) and see that all subscription Workflow Executions have a "Completed" status.
 <!-- @@@@SNIPEND -->
