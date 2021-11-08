@@ -1,18 +1,11 @@
 // @@@SNIPSTART subscription-ts-workflow-definition
 import * as wf from "@temporalio/workflow";
-import type * as activities from "./activities";
+import type * as activitiesTypes from "./activities";
 import { Customer } from "./types";
 
-const {
-  sendWelcomeEmail,
-  sendCancellationEmailDuringTrialPeriod,
-  chargeCustomerForBillingPeriod,
-  sendCancellationEmailDuringActiveSubscription,
-  sendSubscriptionOverEmail,
-} = wf.proxyActivities<typeof activities>({
-  startToCloseTimeout: "10 seconds",
+const activities = wf.proxyActivities<typeof activitiesTypes>({
+  startToCloseTimeout: "5s", // short only because we are just console.logging
 });
-
 
 export const cancelSubscription = wf.defineSignal("cancelSubscription");
 
@@ -22,9 +15,9 @@ export async function SubscriptionWorkflow(
   let subscriptionCancelled = false;
   let totalCharged = 0;
 
-  const CustomerIdName = useState("CustomerIdName", "customerid");
-  const BillingPeriodNumber = useState("BillingPeriodNumber", 0);
-  const BillingPeriodChargeAmount = useState(
+  const CustomerIdName = querysignalState("CustomerIdName", "customerid");
+  const BillingPeriodNumber = querysignalState("BillingPeriodNumber", 0);
+  const BillingPeriodChargeAmount = querysignalState(
     "BillingPeriodChargeAmount",
     customer.Subscription.initialBillingPeriodCharge
   );
@@ -33,7 +26,7 @@ export async function SubscriptionWorkflow(
   wf.setHandler(cancelSubscription, () => void (subscriptionCancelled = true));
 
   // Send welcome email to customer
-  await sendWelcomeEmail(customer);
+  await activities.sendWelcomeEmail(customer);
 
   // Start the free trial period. User can still cancel subscription during this time
   if (
@@ -43,7 +36,7 @@ export async function SubscriptionWorkflow(
     )
   ) {
     // If customer cancelled their subscription during trial period, send notification email
-    await sendCancellationEmailDuringTrialPeriod(customer);
+    await activities.sendCancellationEmailDuringTrialPeriod(customer);
     // We have completed subscription for this customer.
     // Finishing workflow execution
     return "Subscription finished for: " + customer.Id;
@@ -55,8 +48,8 @@ export async function SubscriptionWorkflow(
     while (true) {
       if (BillingPeriodNumber.value >= customer.Subscription.MaxBillingPeriods)
         break;
-      console.log('charging', customer.Id, BillingPeriodChargeAmount.value)
-      await chargeCustomerForBillingPeriod(
+      console.log("charging", customer.Id, BillingPeriodChargeAmount.value);
+      await activities.chargeCustomerForBillingPeriod(
         customer,
         BillingPeriodChargeAmount.value
       );
@@ -70,7 +63,9 @@ export async function SubscriptionWorkflow(
         )
       ) {
         // If customer cancelled their subscription send notification email
-        await sendCancellationEmailDuringActiveSubscription(customer);
+        await activities.sendCancellationEmailDuringActiveSubscription(
+          customer
+        );
         break;
       }
       BillingPeriodNumber.value++;
@@ -78,20 +73,24 @@ export async function SubscriptionWorkflow(
     // if we get here the subscription period is over
     // notify the customer to buy a new subscription
     if (!subscriptionCancelled) {
-      await sendSubscriptionOverEmail(customer);
+      await activities.sendSubscriptionOverEmail(customer);
     }
-    return "Completed " + wf.workflowInfo().workflowId + ", Total Charged: " + totalCharged;
+    return (
+      "Completed " +
+      wf.workflowInfo().workflowId +
+      ", Total Charged: " +
+      totalCharged
+    );
   }
 }
 
-function useState<T = any>(name: string, initialValue: T) {
+function querysignalState<T = any>(name: string, initialValue: T) {
   const signal = wf.defineSignal<[T]>(name);
   const query = wf.defineQuery<T>(name);
   let state: T = initialValue;
-  // wf.setHandler(signal, (newValue: T) => void (state = newValue));
   wf.setHandler(signal, (newValue: T) => {
-    console.log('updating ', name, newValue)
-    state = newValue
+    console.log("updating ", name, newValue);
+    state = newValue;
   });
   wf.setHandler(query, () => state);
   return {
