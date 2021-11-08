@@ -21,9 +21,9 @@ export async function SubscriptionWorkflow(
 ): Promise<string> {
   let subscriptionCancelled = false;
 
-  let CustomerIdName = useState("CustomerIdName", "customerid");
-  let BillingPeriodNumber = useState("BillingPeriodNumber", 0);
-  let BillingPeriodChargeAmount = useState(
+  const CustomerIdName = useState("CustomerIdName", "customerid");
+  const BillingPeriodNumber = useState("BillingPeriodNumber", 0);
+  const BillingPeriodChargeAmount = useState(
     "BillingPeriodChargeAmount",
     customer.Subscription.initialBillingPeriodCharge
   );
@@ -50,6 +50,7 @@ export async function SubscriptionWorkflow(
     // Trial period is over, start billing until
     // we reach the max billing periods for the subscription
     // or sub has been cancelled
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (BillingPeriodNumber.value >= customer.Subscription.MaxBillingPeriods)
         break;
