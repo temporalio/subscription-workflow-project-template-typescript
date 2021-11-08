@@ -2,7 +2,9 @@
 <!-- @@@SNIPSTART subscription-ts-readme -->
 This project template illustrates the design pattern for subscription style business logic.
 
-**Setup**
+You might compare this to similar projects in our [Go](https://github.com/temporalio/subscription-workflow-project-template-go), [Java](https://github.com/temporalio/subscription-workflow-project-template-java) and [PHP](https://github.com/temporalio/subscription-workflow-project-template-php) SDKs.
+
+## Setup
 
 Run the Temporal Server:
 
