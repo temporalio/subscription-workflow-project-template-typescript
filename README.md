@@ -4,6 +4,29 @@ This project template illustrates the design pattern for subscription style busi
 
 You might compare this to similar projects in our [Go](https://github.com/temporalio/subscription-workflow-project-template-go), [Java](https://github.com/temporalio/subscription-workflow-project-template-java) and [PHP](https://github.com/temporalio/subscription-workflow-project-template-php) SDKs.
 
+## Project Specifications
+
+Our task is to write a Workflow for a limited time Subscription (eg a 36 month Phone plan) that satisfies these conditions:
+
+1. When the user signs up, **send a welcome email** and start a free trial for `TrialPeriod`.
+2. When the `TrialPeriod` expires, start the billing process
+   - If the user cancels during the trial, **send a trial cancellation email**.
+3. Billing Process:
+   - As long as you have not exceeded `MaxBillingPeriods`,
+   - **Charge the customer** for the `BillingPeriodChargeAmount`.
+   - Then wait for the next `BillingPeriod`.
+   - If the customer cancels during a billing period, **send a subscription cancellation email**.
+   - If Subscription has ended normally (exceeded `MaxBillingPeriods` without cancellation), **send a subscription ended email**.
+4. At any point while subscriptions are ongoing, be able to look up and change any customer's:
+   - Amount Charged
+   - Period number (for manual adjustments e.g. refunds)
+
+Of course, this all has to be fault tolerant, scalable to millions of customers, testable, maintainable, observable... yada yada, that's... why you're here!
+
+## Tutorial
+
+The guided tutorial for writing this on your own can be found here: https://docs.temporal.io/docs/typescript/subscription-tutorial
+
 ## Setup
 
 Run the Temporal Server:
