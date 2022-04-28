@@ -31,8 +31,8 @@ export async function SubscriptionWorkflow(
   // Start the free trial period. User can still cancel subscription during this time
   if (
     await wf.condition(
-      customer.Subscription.TrialPeriod,
-      () => subscriptionCancelled
+      () => subscriptionCancelled,
+      customer.Subscription.TrialPeriod
     )
   ) {
     // If customer cancelled their subscription during trial period, send notification email
@@ -58,8 +58,8 @@ export async function SubscriptionWorkflow(
       // whichever comes first
       if (
         await wf.condition(
-          customer.Subscription.BillingPeriod,
-          () => subscriptionCancelled
+          () => subscriptionCancelled,
+          customer.Subscription.BillingPeriod
         )
       ) {
         // If customer cancelled their subscription send notification email
