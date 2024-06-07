@@ -20,7 +20,7 @@ async function run() {
 
   // Signal workflow and update charge amount to 300 for next billing period
   try {
-    await handle.signal("updateBillingChargeAmount", 300);
+    await handle.signal(updateBillingChargeAmount, 300);
     console.log(
       `subscription-${customer.id} updating BillingPeriodChargeAmount to 300`
     );
