@@ -107,27 +107,4 @@ export async function subscriptionWorkflow(
     }, Total Charged: ${totalCharged}`;
   }
 }
-
-function querysignalState<T = any>(name: string, initialValue: T) {
-  const signal = defineSignal<[T]>(name);
-  const query = defineQuery<T>(name);
-  let state: T = initialValue;
-
-  setHandler(signal, (newValue: T) => {
-    log.info(`Updating ${name} to ${newValue}`);
-    state = newValue;
-  });
-  setHandler(query, () => state);
-
-  return {
-    signal,
-    query,
-    get value() {
-      return state;
-    },
-    set value(newVal: T) {
-      state = newVal;
-    },
-  };
-}
 // @@@SNIPEND
