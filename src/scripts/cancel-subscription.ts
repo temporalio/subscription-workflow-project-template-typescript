@@ -1,25 +1,47 @@
 // @@@SNIPSTART subscription-ts-cancel-subscription-signal
-import { Connection, WorkflowClient } from "@temporalio/client";
-import { cancelSubscription } from "../workflows";
+import { Connection, Client } from "@temporalio/client";
+import { cancelSubscription, subscriptionWorkflow } from "../workflows";
+import { TASK_QUEUE_NAME, Customer } from "../shared";
 
 async function run() {
-  const connection = new Connection();
-  const client = new WorkflowClient(connection.service, {
-    workflowDefaults: { taskQueue: "SubscriptionsTaskQueueTS" },
+  const connection = await Connection.connect({ address: "localhost:7233" });
+  const client = new Client({
+    connection,
   });
-  for (let i = 1; i < 6; i++) {
-    try {
-      const handle = await client.getHandle("SubscriptionsWorkflowId-" + i);
-      await handle.signal(cancelSubscription);
-    } catch (err: any) {
-      if (err.details) console.error(err.details);
-      else console.error(err);
+  const subscriptionWorkflowExecution = await client.workflow.start(
+    subscriptionWorkflow,
+    {
+      args: [customer],
+      taskQueue: TASK_QUEUE_NAME,
+      workflowId: `subscription-${customer.id}`,
     }
+  );
+  const handle = await client.workflow.getHandle(`subscription-${customer.id}`);
+
+  try {
+    await handle.signal(cancelSubscription);
+  } catch (err: any) {
+    if (err.details) console.error(err.details);
+    else console.error(err);
   }
+  console.log(await subscriptionWorkflowExecution.result());
 }
 
 run().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+const customer: Customer = {
+  firstName: "Grant",
+  lastName: "Fleming",
+  email: "email-1@customer.com",
+  subscription: {
+    trialPeriod: 2000, // 2 seconds
+    billingPeriod: 2000, // 2 seconds
+    maxBillingPeriods: 12,
+    initialBillingPeriodCharge: 0,
+  },
+  id: "ABC123",
+};
 // @@@SNIPEND

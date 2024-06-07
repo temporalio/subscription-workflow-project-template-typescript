@@ -1,108 +1,103 @@
 // @@@SNIPSTART subscription-ts-workflow-definition
-import * as wf from "@temporalio/workflow";
-import type * as activitiesTypes from "./activities";
-import { Customer } from "./types";
+import {
+  proxyActivities,
+  log,
+  defineSignal,
+  defineQuery,
+  setHandler,
+  condition,
+  workflowInfo,
+  sleep,
+} from "@temporalio/workflow";
+import type * as activities from "./activities";
+import { Customer } from "./shared";
 
-const activities = wf.proxyActivities<typeof activitiesTypes>({
-  startToCloseTimeout: "5s", // short only because we are just console.logging
+const {
+  sendWelcomeEmail,
+  sendCancellationEmailDuringActiveSubscription,
+  chargeCustomerForBillingPeriod,
+  sendCancellationEmailDuringTrialPeriod,
+  sendSubscriptionOverEmail,
+} = proxyActivities<typeof activities>({
+  startToCloseTimeout: "5 seconds",
 });
 
-export const cancelSubscription = wf.defineSignal("cancelSubscription");
+export const cancelSubscription = defineSignal("cancelSubscription");
+export const customerIdNameQuery = defineQuery<string>("customerIdName");
+export const billingPeriodNumberQuery = defineQuery<number>(
+  "billingPeriodNumber"
+);
+export const updateBillingChargeAmount = defineSignal<[number]>(
+  "updateBillingChargeAmount"
+);
+export const totalChargedAmountQuery =
+  defineQuery<number>("totalChargedAmount");
 
-export async function SubscriptionWorkflow(
+export async function subscriptionWorkflow(
   customer: Customer
 ): Promise<string> {
   let subscriptionCancelled = false;
   let totalCharged = 0;
+  let billingPeriodNumber = 1;
+  let billingPeriodChargeAmount =
+    customer.subscription.initialBillingPeriodCharge;
 
-  const CustomerIdName = querysignalState("CustomerIdName", "customerid");
-  const BillingPeriodNumber = querysignalState("BillingPeriodNumber", 0);
-  const BillingPeriodChargeAmount = querysignalState(
-    "BillingPeriodChargeAmount",
-    customer.Subscription.initialBillingPeriodCharge
-  );
-
-  wf.setHandler(CustomerIdName.query, () => customer.Id);
-  wf.setHandler(cancelSubscription, () => void (subscriptionCancelled = true));
+  setHandler(customerIdNameQuery, () => customer.id);
+  setHandler(cancelSubscription, () => {
+    subscriptionCancelled = true;
+  });
+  setHandler(updateBillingChargeAmount, (newAmount: number) => {
+    billingPeriodChargeAmount = newAmount;
+    log.info(
+      `Updating BillingPeriodChargeAmount to ${billingPeriodChargeAmount}`
+    );
+  });
+  setHandler(billingPeriodNumberQuery, () => billingPeriodNumber);
+  setHandler(totalChargedAmountQuery, () => totalCharged);
 
   // Send welcome email to customer
-  await activities.sendWelcomeEmail(customer);
+  await sendWelcomeEmail(customer);
+  await sleep(customer.subscription.trialPeriod);
 
-  // Start the free trial period. User can still cancel subscription during this time
+  // Used to wait for the subscription to be cancelled or for a trial period timeout to elapse
   if (
-    await wf.condition(
-      customer.Subscription.TrialPeriod,
-      () => subscriptionCancelled
+    await condition(
+      () => subscriptionCancelled,
+      customer.subscription.trialPeriod
     )
   ) {
-    // If customer cancelled their subscription during trial period, send notification email
-    await activities.sendCancellationEmailDuringTrialPeriod(customer);
-    // We have completed subscription for this customer.
-    // Finishing workflow execution
-    return "Subscription finished for: " + customer.Id;
+    await sendCancellationEmailDuringTrialPeriod(customer);
+    return `Subscription finished for: ${customer.id}`;
   } else {
-    // Trial period is over, start billing until
-    // we reach the max billing periods for the subscription
-    // or sub has been cancelled
-    // eslint-disable-next-line no-constant-condition
+    // Trial period is over, start billing until we reach the max billing periods for the subscription or subscription has been cancelled
     while (true) {
-      if (BillingPeriodNumber.value >= customer.Subscription.MaxBillingPeriods)
-        break;
-      console.log("charging", customer.Id, BillingPeriodChargeAmount.value);
-      await activities.chargeCustomerForBillingPeriod(
-        customer,
-        BillingPeriodChargeAmount.value
-      );
-      totalCharged += BillingPeriodChargeAmount.value;
-      // Wait 1 billing period to charge customer or if they cancel subscription
-      // whichever comes first
+      if (billingPeriodNumber > customer.subscription.maxBillingPeriods) break;
+
+      log.info(`Charging ${customer.id} amount ${billingPeriodChargeAmount}`);
+
+      await chargeCustomerForBillingPeriod(customer, billingPeriodChargeAmount);
+      totalCharged += billingPeriodChargeAmount;
+      billingPeriodNumber++;
+
+      // Wait 1 billing period to charge customer or if they cancel subscription, whichever comes first
       if (
-        await wf.condition(
-          customer.Subscription.BillingPeriod,
-          () => subscriptionCancelled
+        await condition(
+          () => subscriptionCancelled,
+          customer.subscription.billingPeriod
         )
       ) {
-        // If customer cancelled their subscription send notification email
-        await activities.sendCancellationEmailDuringActiveSubscription(
-          customer
-        );
-        break;
+        await sendCancellationEmailDuringActiveSubscription(customer);
+        return `Subscription finished for: ${customer.id}, Total Charged: ${totalCharged}`;
       }
-      BillingPeriodNumber.value++;
     }
-    // if we get here the subscription period is over
-    // notify the customer to buy a new subscription
-    if (!subscriptionCancelled) {
-      await activities.sendSubscriptionOverEmail(customer);
-    }
-    return (
-      "Completed " +
-      wf.workflowInfo().workflowId +
-      ", Total Charged: " +
-      totalCharged
-    );
-  }
-}
 
-function querysignalState<T = any>(name: string, initialValue: T) {
-  const signal = wf.defineSignal<[T]>(name);
-  const query = wf.defineQuery<T>(name);
-  let state: T = initialValue;
-  wf.setHandler(signal, (newValue: T) => {
-    console.log("updating ", name, newValue);
-    state = newValue;
-  });
-  wf.setHandler(query, () => state);
-  return {
-    signal,
-    query,
-    get value() {
-      // need to use closure because function doesn't rerun unlike React Hooks
-      return state;
-    },
-    set value(newVal: T) {
-      state = newVal;
-    },
-  };
+    // If we get here the subscription period is over, notify the customer to buy a new subscription
+    if (!subscriptionCancelled) {
+      await sendSubscriptionOverEmail(customer);
+    }
+    return `Completed ${
+      workflowInfo().workflowId
+    }, Total Charged: ${totalCharged}`;
+  }
 }
 // @@@SNIPEND

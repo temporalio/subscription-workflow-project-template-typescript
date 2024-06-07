@@ -1,39 +1,89 @@
+// // @@@SNIPSTART subscription-ts-workflow-execution-starter
+// import { Connection, Client } from "@temporalio/client";
+// import { subscriptionWorkflow } from "../workflows";
+// import { Customer, TASK_QUEUE_NAME } from "../shared";
+
+// async function run() {
+//   const connection = await Connection.connect({ address: "localhost:7233" });
+//   const client = new Client({
+//     connection,
+//   });
+
+//   const custArray: Customer[] = [1, 2, 3, 4, 5].map((i) => ({
+//     firstName: "First Name" + i,
+//     lastName: "Last Name" + i,
+//     email: "email-" + i + "@customer.com",
+//     subscription: {
+//       trialPeriod: 3000 + i * 1000, // 3 seconds
+//       billingPeriod: 3000 + i, // 3 seconds
+//       maxBillingPeriods: 3,
+//       initialBillingPeriodCharge: 120 + i * 10,
+//     },
+//     id: "Id-" + i,
+//   }));
+//   const resultArr = await Promise.all(
+//     custArray.map((cust) =>
+//       client.workflow
+//         .start(subscriptionWorkflow, {
+//           args: [cust],
+//           taskQueue: TASK_QUEUE_NAME,
+//           workflowId: "SubscriptionsWorkflow" + cust.id,
+//           workflowRunTimeout: "10 mins",
+//         })
+//         .then((execution) => execution.result())
+//         .catch((err) => console.error("Unable to execute workflow", err))
+//     )
+//   );
+//   resultArr.forEach((result) => {
+//     console.log("Workflow result", result);
+//   });
+// }
+
+// run().catch((err) => {
+//   console.error(err);
+//   process.exit(1);
+// });
+// // @@@SNIPEND
+
 // @@@SNIPSTART subscription-ts-workflow-execution-starter
-import { Connection, WorkflowClient } from "@temporalio/client";
-import { SubscriptionWorkflow } from "../workflows";
-import { Customer } from "../types";
+import { Connection, Client } from "@temporalio/client";
+import { subscriptionWorkflow } from "../workflows";
+import { Customer, TASK_QUEUE_NAME } from "../shared";
 
 async function run() {
-  const connection = new Connection();
-  const client = new WorkflowClient(connection.service, {
-    workflowDefaults: { taskQueue: "SubscriptionsTaskQueueTS" },
+  const connection = await Connection.connect({ address: "localhost:7233" });
+  const client = new Client({
+    connection,
   });
 
-  const custArray = [1, 2, 3, 4, 5].map(
-    (i) =>
-      ({
-        FirstName: "First Name" + i,
-        LastName: "Last Name" + i,
-        Email: "email-" + i + "@customer.com",
-        Subscription: {
-          TrialPeriod: 3000 + i * 1000, // 3 seconds
-          BillingPeriod: 3000 + i, // 3 seconds
-          MaxBillingPeriods: 3,
-          initialBillingPeriodCharge: 120 + i * 10,
-        },
-        Id: "Id-" + i,
-      } as Customer)
-  );
+  const custArray: Customer[] = [1, 2, 3, 4, 5].map((i) => ({
+    firstName: "First Name" + i,
+    lastName: "Last Name" + i,
+    email: "email-" + i + "@customer.com",
+    subscription: {
+      trialPeriod: 3000 + i * 1000, // 3 seconds
+      billingPeriod: 3000 + i, // 3 seconds
+      maxBillingPeriods: 3,
+      initialBillingPeriodCharge: 120 + i * 10,
+    },
+    id: "Id-" + i,
+  }));
   const resultArr = await Promise.all(
-    custArray.map((cust) =>
-      client
-        .execute(SubscriptionWorkflow, {
+    custArray.map(async (cust) => {
+      try {
+        const execution = await client.workflow.start(subscriptionWorkflow, {
           args: [cust],
-          workflowId: "SubscriptionsWorkflow" + cust.Id,
+          taskQueue: TASK_QUEUE_NAME,
+          workflowId: "SubscriptionsWorkflow" + cust.id,
           workflowRunTimeout: "10 mins",
-        })
-        .catch((err) => console.error("Unable to execute workflow", err))
-    )
+        });
+        const result = await execution.result();
+        return result;
+      } catch (err) {
+        console.error("Unable to execute workflow for customer:", cust.id, err);
+        return `Workflow failed for: ${cust.id}`;
+      }
+    })
   );
   resultArr.forEach((result) => {
     console.log("Workflow result", result);
