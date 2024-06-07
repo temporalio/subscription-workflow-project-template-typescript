@@ -19,25 +19,20 @@ async function run() {
   );
 
   // Wait for some time before querying to allow the workflow to progress
-  for (let i = 1; i < 6; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Adjust the wait time as needed
+  for (let i = 1; i <= 5; i++) {
+    // Loop for 5 billing periods
+    await new Promise((resolve) => setTimeout(resolve, 2500)); // Adjust the wait time to match billing period plus buffer
     try {
       const billingPeriodNumber =
         await subscriptionWorkflowExecution.query<number>(
           "billingPeriodNumber"
         );
-      const billingPeriodChargeAmount =
-        await subscriptionWorkflowExecution.query<number>(
-          "billingPeriodChargeAmount"
-        );
+      const totalChargedAmount =
+        await subscriptionWorkflowExecution.query<number>("totalChargedAmount");
 
-      console.log("Workflow:", "Id", subscriptionWorkflowExecution.workflowId);
-      console.log("Billing Results", "Billing Period", billingPeriodNumber);
-      console.log(
-        "Billing Results",
-        "Billing Period Charge",
-        billingPeriodChargeAmount
-      );
+      console.log("Workflow Id", subscriptionWorkflowExecution.workflowId);
+      console.log("Billing Period", billingPeriodNumber);
+      console.log("Total Charged Amount", totalChargedAmount);
     } catch (err) {
       console.error(
         `Error querying workflow with ID ${subscriptionWorkflowExecution.workflowId}:`,
@@ -60,7 +55,7 @@ const customer: Customer = {
     trialPeriod: 2000, // 2 seconds
     billingPeriod: 2000, // 2 seconds
     maxBillingPeriods: 12,
-    initialBillingPeriodCharge: 0,
+    initialBillingPeriodCharge: 100,
   },
   id: "ABC123",
 };

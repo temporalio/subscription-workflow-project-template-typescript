@@ -54,6 +54,6 @@ describe("Subscription Workflow", function () {
       })
     );
 
-    assert.equal(result, `Completed trial-cancel-test, Total Charged: 330`);
+    assert.equal(result, `Completed trial-cancel-test, Total Charged: 300`);
   });
 });

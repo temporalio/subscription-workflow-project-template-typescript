@@ -7,6 +7,7 @@ import {
   setHandler,
   condition,
   workflowInfo,
+  sleep,
 } from "@temporalio/workflow";
 import type * as activities from "./activities";
 import { Customer } from "./shared";
@@ -29,18 +30,17 @@ export const billingPeriodNumberQuery = defineQuery<number>(
 export const updateBillingChargeAmount = defineSignal<[number]>(
   "updateBillingChargeAmount"
 );
-export const billingPeriodChargeAmountQuery = defineQuery<number>(
-  "billingPeriodChargeAmount"
-);
+export const totalChargedAmountQuery =
+  defineQuery<number>("totalChargedAmount");
 
 export async function subscriptionWorkflow(
   customer: Customer
 ): Promise<string> {
   let subscriptionCancelled = false;
   let totalCharged = 0;
-  let billingPeriodNumber = 0;
+  let billingPeriodNumber = 1;
   let billingPeriodChargeAmount =
-    customer.subscription.initialBillingPeriodCharge; // Initialize billing period charge amount
+    customer.subscription.initialBillingPeriodCharge;
 
   setHandler(customerIdNameQuery, () => customer.id);
   setHandler(cancelSubscription, () => {
@@ -53,12 +53,13 @@ export async function subscriptionWorkflow(
     );
   });
   setHandler(billingPeriodNumberQuery, () => billingPeriodNumber);
-  setHandler(billingPeriodChargeAmountQuery, () => billingPeriodChargeAmount);
+  setHandler(totalChargedAmountQuery, () => totalCharged);
 
   // Send welcome email to customer
   await sendWelcomeEmail(customer);
+  await sleep(customer.subscription.trialPeriod);
 
-  // Used to wait for a the subscription to be cancelled or for a trial period timeout to elapse
+  // Used to wait for the subscription to be cancelled or for a trial period timeout to elapse
   if (
     await condition(
       () => subscriptionCancelled,
@@ -66,22 +67,17 @@ export async function subscriptionWorkflow(
     )
   ) {
     await sendCancellationEmailDuringTrialPeriod(customer);
-    // We have completed subscription for this customer. Finishing workflow execution
     return `Subscription finished for: ${customer.id}`;
   } else {
     // Trial period is over, start billing until we reach the max billing periods for the subscription or subscription has been cancelled
     while (true) {
-      if (billingPeriodNumber >= customer.subscription.maxBillingPeriods) break;
-
-      // Update billing period charge amount
-      billingPeriodChargeAmount =
-        customer.subscription.initialBillingPeriodCharge +
-        billingPeriodNumber * 10; // Example increment logic
+      if (billingPeriodNumber > customer.subscription.maxBillingPeriods) break;
 
       log.info(`Charging ${customer.id} amount ${billingPeriodChargeAmount}`);
 
       await chargeCustomerForBillingPeriod(customer, billingPeriodChargeAmount);
       totalCharged += billingPeriodChargeAmount;
+      billingPeriodNumber++;
 
       // Wait 1 billing period to charge customer or if they cancel subscription, whichever comes first
       if (
@@ -90,12 +86,9 @@ export async function subscriptionWorkflow(
           customer.subscription.billingPeriod
         )
       ) {
-        // If customer cancelled their subscription, send notification email
         await sendCancellationEmailDuringActiveSubscription(customer);
-        return `Subscription finished for: ${customer.id}`;
+        return `Subscription finished for: ${customer.id}, Total Charged: ${totalCharged}`;
       }
-
-      billingPeriodNumber++;
     }
 
     // If we get here the subscription period is over, notify the customer to buy a new subscription
