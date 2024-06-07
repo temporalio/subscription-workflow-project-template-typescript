@@ -1,3 +1,4 @@
+// @@@SNIPSTART subscription-ts-shared-file
 export const TASK_QUEUE_NAME = "subscriptions-task-queue";
 
 export interface Customer {
@@ -12,3 +13,4 @@ export interface Customer {
   };
   id: string;
 }
+// @@@SNIPEND
