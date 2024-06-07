@@ -1,19 +1,30 @@
 // @@@SNIPSTART subscription-ts-activities
-import { Customer } from "./types";
+import { log } from "@temporalio/activity";
+
+import { Customer } from "./shared";
 
 export async function sendWelcomeEmail(customer: Customer) {
-  console.log(`Sending welcome email to ${customer.Email}`);
+  log.info(`Sending welcome email to ${customer.email}`);
 }
-export async function sendCancellationEmailDuringTrialPeriod(customer: Customer) {
-  console.log(`Sending trial cancellation email to ${customer.Email}`);
+export async function sendCancellationEmailDuringTrialPeriod(
+  customer: Customer
+) {
+  log.info(`Sending trial cancellation email to ${customer.email}`);
 }
-export async function chargeCustomerForBillingPeriod(customer: Customer, chargeAmount: number) {
-  console.log(`Charging ${customer.Email} amount ${chargeAmount} for their billing period`);
+export async function chargeCustomerForBillingPeriod(
+  customer: Customer,
+  chargeAmount: number
+) {
+  log.info(
+    `Charging ${customer.email} amount ${chargeAmount} for their billing period`
+  );
 }
-export async function sendCancellationEmailDuringActiveSubscription(customer: Customer) {
-  console.log(`Sending active subscriber cancellation email to ${customer.Email}`);
+export async function sendCancellationEmailDuringActiveSubscription(
+  customer: Customer
+) {
+  log.info(`Sending active subscriber cancellation email to ${customer.email}`);
 }
 export async function sendSubscriptionOverEmail(customer: Customer) {
-  console.log(`Sending subscription over email to ${customer.Email}`);
+  log.info(`Sending subscription over email to ${customer.email}`);
 }
 // @@@SNIPEND
