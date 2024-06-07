@@ -25,7 +25,7 @@ Of course, this all has to be fault tolerant, scalable to millions of customers,
 
 ## Tutorial
 
-The guided tutorial for writing this on your own can be found here: https://docs.temporal.io/docs/typescript/subscription-tutorial
+The guided tutorial for writing this on your own can be found here: https://learn.temporal.io/tutorials/typescript/subscriptions/
 
 ## Setup
 
