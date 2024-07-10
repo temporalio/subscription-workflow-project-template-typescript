@@ -7,7 +7,7 @@ You might compare this to similar projects in our [Go](https://github.com/tempor
 
 ## Project Specifications
 
-Our task is to write a Workflow for a limited time Subscription (eg a 36 month Phone plan) that satisfies these conditions:
+Your task is to write a Workflow for a limited time Subscription (eg a 36 month Phone plan) that satisfies these conditions:
 
 1. When the user signs up, **send a welcome email** and start a free trial for `trialPeriod`.
 2. If the user cancels during the trial, **send a trial cancellation email** and complete the Workflow. Liekewise, if the `trialPeriod` expires, start the billing process.
