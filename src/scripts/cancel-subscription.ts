@@ -18,12 +18,7 @@ async function run() {
   );
   const handle = await client.workflow.getHandle(`subscription-${customer.id}`);
 
-  try {
-    await handle.signal(cancelSubscription);
-  } catch (err: any) {
-    if (err.details) console.error(err.details);
-    else console.error(err);
-  }
+  await handle.signal(cancelSubscription);
   console.log(await subscriptionWorkflowExecution.result());
 }
 

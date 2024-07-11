@@ -73,6 +73,11 @@ export async function subscriptionWorkflow(
     while (true) {
       if (billingPeriodNumber > customer.subscription.maxBillingPeriods) break;
 
+      if (subscriptionCancelled) {
+        await sendCancellationEmailDuringActiveSubscription(customer);
+        return `Subscription finished for: ${customer.id}, Total Charged: ${totalCharged}`;
+      }
+
       log.info(`Charging ${customer.id} amount ${billingPeriodChargeAmount}`);
 
       await chargeCustomerForBillingPeriod(customer, billingPeriodChargeAmount);
@@ -91,14 +96,11 @@ export async function subscriptionWorkflow(
       }
     }
 
-    // If we get here the subscription period is over, notify the customer to buy a new subscription
-    if (!subscriptionCancelled) {
-      await sendSubscriptionOverEmail(customer);
-    }
+    // If the subscription period is over and not cancelled, notify the customer to buy a new subscription
+    await sendSubscriptionOverEmail(customer);
     return `Completed ${
       workflowInfo().workflowId
     }, Total Charged: ${totalCharged}`;
   }
 }
 // @@@SNIPEND
-
