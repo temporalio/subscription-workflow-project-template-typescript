@@ -14,7 +14,7 @@ import { Customer } from "./shared";
 
 const {
   sendWelcomeEmail,
-  sendCancellationEmailDuringActiveSubscription,
+  sendSubscriptionFinishedEmail,
   chargeCustomerForBillingPeriod,
   sendCancellationEmailDuringTrialPeriod,
   sendSubscriptionOverEmail,
@@ -74,7 +74,7 @@ export async function subscriptionWorkflow(
       if (billingPeriodNumber > customer.subscription.maxBillingPeriods) break;
 
       if (subscriptionCancelled) {
-        await sendCancellationEmailDuringActiveSubscription(customer);
+        await sendSubscriptionFinishedEmail(customer);
         return `Subscription finished for: ${customer.id}, Total Charged: ${totalCharged}`;
       }
 
@@ -83,17 +83,6 @@ export async function subscriptionWorkflow(
       await chargeCustomerForBillingPeriod(customer, billingPeriodChargeAmount);
       totalCharged += billingPeriodChargeAmount;
       billingPeriodNumber++;
-
-      // Wait 1 billing period to charge customer or if they cancel subscription, whichever comes first
-      if (
-        await condition(
-          () => subscriptionCancelled,
-          customer.subscription.billingPeriod
-        )
-      ) {
-        await sendCancellationEmailDuringActiveSubscription(customer);
-        return `Subscription finished for: ${customer.id}, Total Charged: ${totalCharged}`;
-      }
     }
 
     // If the subscription period is over and not cancelled, notify the customer to buy a new subscription

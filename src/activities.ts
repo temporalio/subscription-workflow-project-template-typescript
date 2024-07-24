@@ -19,10 +19,10 @@ export async function chargeCustomerForBillingPeriod(
     `Charging ${customer.email} amount ${chargeAmount} for their billing period`
   );
 }
-export async function sendCancellationEmailDuringActiveSubscription(
+export async function sendSubscriptionFinishedEmail(
   customer: Customer
 ) {
-  log.info(`Sending active subscriber cancellation email to ${customer.email}`);
+  log.info(`Sending subscription completed email to ${customer.email}`);
 }
 export async function sendSubscriptionOverEmail(customer: Customer) {
   log.info(`Sending subscription over email to ${customer.email}`);

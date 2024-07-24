@@ -17,7 +17,7 @@ async function run() {
     taskQueue: TASK_QUEUE_NAME,
   });
 
-  // Step 2: Start accepting tasks on the `tutorial` queue
+  // Step 2: Start accepting tasks on the `subscriptions-task-queue` queue
   await worker.run();
 }
 
