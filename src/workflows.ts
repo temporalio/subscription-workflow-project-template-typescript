@@ -57,7 +57,7 @@ export async function subscriptionWorkflow(
 
   // Send welcome email to customer
   await sendWelcomeEmail(customer);
-  await sleep(customer.subscription.trialPeriod);
+  await sleep(1000);
 
   // Used to wait for the subscription to be cancelled or for a trial period timeout to elapse
   if (
