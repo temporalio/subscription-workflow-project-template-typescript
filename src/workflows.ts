@@ -85,7 +85,6 @@ export async function subscriptionWorkflow(
 
       // Wait for the next billing period or until the subscription is cancelled
       await sleep(customer.subscription.billingPeriod);
-      if (subscriptionCancelled) break;
     }
 
     // If the subscription period is over and not cancelled, notify the customer to buy a new subscription
