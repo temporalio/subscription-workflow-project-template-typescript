@@ -39,10 +39,10 @@ const customer: Customer = {
   lastName: "Fleming",
   email: "email-1@customer.com",
   subscription: {
-    trialPeriod: 2000, // 2 seconds
-    billingPeriod: 2000, // 2 seconds
+    trialPeriod: 2000,
+    billingPeriod: 2000,
     maxBillingPeriods: 12,
-    initialBillingPeriodCharge: 0,
+    initialBillingPeriodCharge: 100,
   },
   id: "ABC123",
 };

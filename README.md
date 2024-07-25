@@ -112,3 +112,4 @@ Subscription finished for: ABC123
 ```
 
 After running this, check out the [Temporal Web UI](localhost://8088) and see that all subscription Workflow Executions have a "Completed" status.
+
