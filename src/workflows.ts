@@ -57,7 +57,6 @@ export async function subscriptionWorkflow(
 
   // Send welcome email to customer
   await sendWelcomeEmail(customer);
-  await sleep(1000);
 
   // Used to wait for the subscription to be cancelled or for a trial period timeout to elapse
   if (
@@ -83,6 +82,10 @@ export async function subscriptionWorkflow(
       await chargeCustomerForBillingPeriod(customer, billingPeriodChargeAmount);
       totalCharged += billingPeriodChargeAmount;
       billingPeriodNumber++;
+
+      // Wait for the next billing period or until the subscription is cancelled
+      await sleep(customer.subscription.billingPeriod);
+      if (subscriptionCancelled) break;
     }
 
     // If the subscription period is over and not cancelled, notify the customer to buy a new subscription

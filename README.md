@@ -1,6 +1,3 @@
-<!-- # Temporal Subscription Workflow Template in TypeScript
-<!-- @@@SNIPSTART subscription-ts-readme -->
-
 This project template illustrates the design pattern for subscription style business logic.
 
 You might compare this to similar projects in our [Go](https://github.com/temporalio/subscription-workflow-project-template-go), [Java](https://github.com/temporalio/subscription-workflow-project-template-java), [Python](https://github.com/temporalio/email-subscription-project-python/) and [PHP](https://github.com/temporalio/subscription-workflow-project-template-php) SDKs.
@@ -111,8 +108,7 @@ npm run cancelsubscription
 This will cancel the subscription to the user supplied in the Client:
 
 ```bash
-Sending trial cancellation email to email-1@customer.com
+Subscription finished for: ABC123
 ```
 
 After running this, check out the [Temporal Web UI](localhost://8088) and see that all subscription Workflow Executions have a "Completed" status.
-@@@@SNIPEND -->
